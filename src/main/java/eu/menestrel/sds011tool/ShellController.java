@@ -68,7 +68,7 @@ public class ShellController {
   /**
    * Get the port at the given index.
    *
-   * @return Optional.of(port) if nothing went wrong, otherwise Optional.empty() if an error occured.
+   * @return Optional.of(port) if nothing went wrong, otherwise Optional.empty() if an error occurred.
    */
   private Optional<SerialPort> getSerialPort(int index) {
     SerialPort port;
