@@ -1,11 +1,9 @@
 package eu.menestrel.sds011tool;
 
 import com.fazecast.jSerialComm.SerialPort;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,24 +40,49 @@ public class ShellController {
 
   @ShellMethod("Print received data")
   public void open(int index) {
+    getSerialPort(index).ifPresent(port -> {
+      log.info("will connect to port {]", port.getDescriptivePortName());
+
+      log.info("opening channel");
+      boolean successfullyOpened = port.openPort();
+      if (!successfullyOpened) {
+        log.error("couldn't open the port");
+        return;
+      }
+
+      port.addDataListener(new Sds011DataListener());
+    });
+  }
+
+  @ShellMethod("Close the port and not receive data any more")
+  public void close(int index) {
+    getSerialPort(index).ifPresent(port -> {
+      log.info("will close port: {}", port.getDescriptivePortName());
+      port.removeDataListener();
+      log.info("removed datalistener");
+      boolean closed = port.closePort();
+      log.info("port closed? {}", closed);
+    });
+  }
+
+  /**
+   * Get the port at the given index.
+   *
+   * @return Optional.of(port) if nothing went wrong, otherwise Optional.empty() if an error occured.
+   */
+  private Optional<SerialPort> getSerialPort(int index) {
+    SerialPort port;
     SerialPort[] commPorts = SerialPort.getCommPorts();
     if (index < 0) {
       log.error("index is below 0 but a positive number was expected");
+      return Optional.empty();
     }
     if (index >= commPorts.length) {
       log.error("index is bigger than the possible maximum %s", commPorts.length);
+      return Optional.empty();
     }
-    SerialPort port = configurePortFromConfiguration(commPorts[index]);
-    log.info("will connect to port {]", port.getDescriptivePortName());
-
-    log.info("opening channel");
-    boolean successfullyOpened = port.openPort();
-    if (!successfullyOpened) {
-      log.error("couldn't open the port");
-      return;
-    }
-
-    port.addDataListener(new Sds011DataListener());
+    port = configurePortFromConfiguration(commPorts[index]);
+    return Optional.of(port);
   }
 
   @NonNull

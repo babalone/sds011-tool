@@ -18,10 +18,14 @@ public class Sds011DataListener implements SerialPortDataListener {
     return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
   }
 
+  /**
+   * Will receive events of the serial bus. Everything that is not 10 bytes will be ignored.
+   */
   @Override
   public void serialEvent(SerialPortEvent event) {
-    if (event.getEventType() == SerialPort.LISTENING_EVENT_DATA_RECEIVED) {
+    if (event.getEventType() == SerialPort.LISTENING_EVENT_DATA_RECEIVED && event.getReceivedData().length == 10) {
       Sds011Packet receivedPacket = new Sds011Packet(event.getReceivedData());
+      log.info("received: {}", Hex.encodeHexString(event.getReceivedData()));
       log.info("received packet: {}", receivedPacket);
     }
   }

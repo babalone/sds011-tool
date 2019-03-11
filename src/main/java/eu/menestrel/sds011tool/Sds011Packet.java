@@ -1,8 +1,7 @@
 package eu.menestrel.sds011tool;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import lombok.Data;
+import lombok.NonNull;
 import org.apache.commons.codec.binary.Hex;
 
 /**
@@ -23,11 +22,13 @@ public class Sds011Packet {
   private byte messageTail;
 
   /**
-   * Create a new instance by parsing the given bytes.
+   * Create a new instance by parsing the given 10 bytes.
+   *
+   * @throws IllegalArgumentException Is thrown when not 10 bytes were given.
    */
-  public Sds011Packet(byte[] bytes) {
+  public Sds011Packet(@NonNull byte[] bytes) {
     if (bytes.length != 10) {
-      throw new IllegalArgumentException("was excpecting 10 bytes, but received " + bytes.length);
+      throw new IllegalArgumentException("was expecting 10 bytes, but received " + bytes.length);
     }
     header = bytes[0];
     commanderNo = bytes[1];
@@ -73,7 +74,12 @@ public class Sds011Packet {
   @Override
   public String toString() {
     return String
-        .format("%s SDS011 Packet (pm 2.5 = %d; pm 10 = %d) from device %s", (isValidData() ? "valid" : "invalid"),
-            getPm25(), getPm10(), Hex.encodeHexString(new byte[]{idByte1, idByte2}));
+        .format("%s SDS011 Packet (pm 2.5 = %3d,%1d; pm 10 = %3d,%1d) from device %s",
+            (isValidData() ? "valid" : "invalid"),
+            getPm25() / 10,
+            getPm25() % 10,
+            getPm10() / 10,
+            getPm10() % 10,
+            Hex.encodeHexString(new byte[]{idByte1, idByte2}));
   }
 }
